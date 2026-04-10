@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  role           String          // ADMIN, MANAGER, MEMBER
+  country        String?         // INDIA, AMERICA
+  paymentMethods PaymentMethod[]
+  orders         Order[]
+}
+
+model Restaurant {
+  id        String     @id @default(uuid())
+  name      String
+  country   String     // INDIA or AMERICA
+  menuItems MenuItem[]
+}
+
+model MenuItem {
+  id           String     @id @default(uuid())
+  name         String
+  price        Float
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  OrderItem    OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String      // PENDING, COMPLETED, CANCELLED
+  totalAmount Float
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  quantity   Int
+}
+
+model PaymentMethod {
+  id      String  @id @default(uuid())
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type    String  // CARD, UPI, WALLET
+  details String  // Masked number or UPI ID
+}
